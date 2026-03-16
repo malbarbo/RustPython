@@ -3,6 +3,16 @@
 //! See also:
 //!   <https://github.com/ProgVal/pythonvm-rust/blob/master/src/processor/mod.rs>
 
+// On wasm32 the host (JS) provides `check_interrupt`, which reads a
+// SharedArrayBuffer flag set by the main thread when the user clicks Stop.
+// This is the only way to interrupt a running Python eval loop on WASM since
+// the worker thread is blocked and cannot receive JS messages.
+#[cfg(target_arch = "wasm32")]
+#[link(wasm_import_module = "env")]
+unsafe extern "C" {
+    fn check_interrupt() -> i32;
+}
+
 #[cfg(feature = "rustpython-compiler")]
 mod compile;
 mod context;
@@ -1462,6 +1472,11 @@ impl VirtualMachine {
         }
         #[cfg(target_arch = "wasm32")]
         {
+            if unsafe { check_interrupt() } != 0 {
+                return Err(self.new_exception_empty(
+                    self.ctx.exceptions.keyboard_interrupt.to_owned(),
+                ));
+            }
             Ok(())
         }
     }

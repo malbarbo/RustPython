@@ -152,6 +152,22 @@ impl CompilationSource {
                 Diagnostic::spans_error(self.span, format!("Invalid UTF-8 in file name {path:?}"))
             })?;
             if path.is_dir() {
+                // Skip directories that are not useful for embedded/WASM use.
+                const SKIP_DIRS: &[&str] = &[
+                    "test",
+                    "tests",
+                    "ensurepip",
+                    "venv",
+                    "pydoc_data",
+                    "tkinter",
+                    "turtledemo",
+                    "idlelib",
+                    "lib2to3",
+                    "multiprocessing",
+                ];
+                if SKIP_DIRS.iter().any(|d| file_name == *d) {
+                    continue;
+                }
                 code_map.extend(self.compile_dir(
                     base,
                     &path,
