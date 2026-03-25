@@ -10,9 +10,10 @@ repository.workspace = true
 license.workspace = true
 
 [features]
-default = ["compiler", "wasmbind", "gc", "host_env", "stdio", "doc"]
+default = ["compiler", "wasmbind", "gc", "host_env", "stdio", "doc", "extra-modules"]
 doc = ["dep:rustpython-doc", "dep:xz"]
 host_env = ["rustpython-host_env/ctypes"]
+extra-modules = ["rustpython-sre_engine"]
 stdio = []
 importlib = []
 encodings = ["importlib"]
@@ -44,7 +45,7 @@ ruff_python_parser = { workspace = true }
 ruff_text_size = { workspace = true, optional = true }
 rustpython-compiler-core = { workspace = true }
 rustpython-literal = { workspace = true }
-rustpython-sre_engine = { workspace = true }
+rustpython-sre_engine = { workspace = true, optional = true }
 rustpython-unicode = { workspace = true }
 
 ascii = { workspace = true }
