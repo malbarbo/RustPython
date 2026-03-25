@@ -18,7 +18,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use rustpython_compiler_core::{Mode, bytecode::CodeObject, frozen};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs,
     path::{Path, PathBuf},
 };
@@ -130,6 +130,32 @@ impl CompilationSource {
         mode: Mode,
         compiler: &dyn Compiler,
     ) -> Result<HashMap<String, CompiledModule>, Diagnostic> {
+        // If FREEZE_ALLOWLIST is set, only freeze modules listed in that file.
+        // Each line is a dotted module name (e.g. "abc", "collections._defaultdict").
+        // An empty set means no filtering (freeze everything).
+        let allowlist: HashSet<&str> = std::env::var("FREEZE_ALLOWLIST")
+            .ok()
+            .map(|path| {
+                let content: &'static str =
+                    Box::leak(fs::read_to_string(&path).unwrap().into_boxed_str());
+                content
+                    .lines()
+                    .filter(|l| !l.is_empty() && !l.starts_with('#'))
+                    .collect()
+            })
+            .unwrap_or_default();
+        self.compile_dir_filtered(base, path, parent, mode, compiler, &allowlist)
+    }
+
+    fn compile_dir_filtered(
+        &self,
+        base: &Path,
+        path: &Path,
+        parent: String,
+        mode: Mode,
+        compiler: &dyn Compiler,
+        allowlist: &HashSet<&str>,
+    ) -> Result<HashMap<String, CompiledModule>, Diagnostic> {
         let mut code_map = HashMap::new();
         let paths = fs::read_dir(path)
             .or_else(|e| {
@@ -152,19 +178,40 @@ impl CompilationSource {
                 Diagnostic::spans_error(self.span, format!("Invalid UTF-8 in file name {path:?}"))
             })?;
             if path.is_dir() {
-                code_map.extend(self.compile_dir(
-                    base,
-                    &path,
-                    if parent.is_empty() {
-                        file_name.to_string()
-                    } else {
-                        format!("{parent}.{file_name}")
-                    },
-                    mode,
-                    compiler,
+                let child_mod = if parent.is_empty() {
+                    file_name.to_string()
+                } else {
+                    format!("{parent}.{file_name}")
+                };
+                // Skip directory if no allowlisted module starts with this prefix.
+                if !allowlist.is_empty() {
+                    let prefix_dot = format!("{child_mod}.");
+                    if !allowlist.contains(child_mod.as_str())
+                        && !allowlist.iter().any(|m| m.starts_with(&prefix_dot))
+                    {
+                        continue;
+                    }
+                }
+                code_map.extend(self.compile_dir_filtered(
+                    base, &path, child_mod, mode, compiler, allowlist,
                 )?);
             } else if file_name.ends_with(".py") {
                 let stem = path.file_stem().unwrap().to_str().unwrap();
+
+                // Check dotted module name against the allowlist.
+                if !allowlist.is_empty() {
+                    let module_name = if stem == "__init__" {
+                        parent.clone()
+                    } else if parent.is_empty() {
+                        stem.to_owned()
+                    } else {
+                        format!("{parent}.{stem}")
+                    };
+                    if !module_name.is_empty() && !allowlist.contains(module_name.as_str()) {
+                        continue;
+                    }
+                }
+
                 let is_init = stem == "__init__";
                 let module_name = if is_init {
                     parent.clone()

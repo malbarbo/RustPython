@@ -1,4 +1,3 @@
-import re
 import sys
 import copy
 import types
@@ -218,7 +217,29 @@ _POST_INIT_NAME = '__post_init__'
 # String regex that string annotations for ClassVar or InitVar must match.
 # Allows "identifier.identifier[" or "identifier[".
 # https://bugs.python.org/issue33453 for details.
-_MODULE_IDENTIFIER_RE = re.compile(r'^(?:\s*(\w+)\s*\.)?\s*(\w+)')
+# Replaced regex with simple string parsing to avoid pulling in the re module.
+def _match_module_identifier(annotation):
+    """Parse optional 'module.identifier' from annotation string.
+    Returns (module_name_or_None, identifier) or None if no match."""
+    s = annotation.lstrip()
+    # Try to read a word
+    i = 0
+    while i < len(s) and (s[i].isalnum() or s[i] == '_'):
+        i += 1
+    if i == 0:
+        return None
+    first = s[:i]
+    rest = s[i:].lstrip()
+    if rest.startswith('.'):
+        # first is the module name, read identifier after dot
+        rest = rest[1:].lstrip()
+        j = 0
+        while j < len(rest) and (rest[j].isalnum() or rest[j] == '_'):
+            j += 1
+        if j == 0:
+            return None
+        return (first, rest[:j])
+    return (None, first)
 
 # Atomic immutable types which don't require any recursive handling and for which deepcopy
 # returns the same object. We can provide a fast-path for these types in asdict and astuple.
@@ -803,10 +824,10 @@ def _is_type(annotation, cls, a_module, a_type, is_type_predicate):
     # a eval() penalty for every single field of every dataclass
     # that's defined.  It was judged not worth it.
 
-    match = _MODULE_IDENTIFIER_RE.match(annotation)
+    match = _match_module_identifier(annotation)
     if match:
         ns = None
-        module_name = match.group(1)
+        module_name = match[0]
         if not module_name:
             # No module name, assume the class's module did
             # "from dataclasses import InitVar".
@@ -816,7 +837,7 @@ def _is_type(annotation, cls, a_module, a_type, is_type_predicate):
             module = sys.modules.get(cls.__module__)
             if module and module.__dict__.get(module_name) is a_module:
                 ns = sys.modules.get(a_type.__module__).__dict__
-        if ns and is_type_predicate(ns.get(match.group(2)), a_module):
+        if ns and is_type_predicate(ns.get(match[1]), a_module):
             return True
     return False
 

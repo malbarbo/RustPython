@@ -1,5 +1,6 @@
 // spell-checker:ignore hexlify unhexlify uuencodes CRCTAB rlecode rledecode
 
+#[cfg(feature = "extra-modules")]
 pub(super) use decl::crc32;
 pub(crate) use decl::module_def;
 use rustpython_vm::{VirtualMachine, builtins::PyBaseExceptionRef, convert::ToPyException};

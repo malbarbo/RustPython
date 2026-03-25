@@ -15,21 +15,31 @@ mod _remote_debugging;
 pub mod array;
 mod binascii;
 mod bisect;
+#[cfg(feature = "extra-modules")]
 mod bz2;
 mod cmath;
+#[cfg(feature = "extra-modules")]
 mod compression; // internal module
 mod contextvars;
 mod csv;
-#[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+#[cfg(all(feature = "extra-modules", not(any(target_os = "android", target_arch = "wasm32"))))]
 mod lzma;
+#[cfg(feature = "extra-modules")]
 mod zlib;
 
+#[cfg(feature = "extra-modules")]
 mod blake2;
+#[cfg(feature = "extra-modules")]
 mod hashlib;
+#[cfg(feature = "extra-modules")]
 mod md5;
+#[cfg(feature = "extra-modules")]
 mod sha1;
+#[cfg(feature = "extra-modules")]
 mod sha256;
+#[cfg(feature = "extra-modules")]
 mod sha3;
+#[cfg(feature = "extra-modules")]
 mod sha512;
 
 mod json;
@@ -46,6 +56,7 @@ mod _tokenize;
 mod math;
 #[cfg(all(feature = "host_env", any(unix, windows)))]
 mod mmap;
+#[cfg(feature = "extra-modules")]
 mod pyexpat;
 mod pystruct;
 mod random;
@@ -150,7 +161,9 @@ pub fn stdlib_module_defs(ctx: &Context) -> Vec<&'static builtins::PyModuleDef> 
         array::module_def(ctx),
         binascii::module_def(ctx),
         bisect::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         blake2::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         bz2::module_def(ctx),
         cmath::module_def(ctx),
         contextvars::module_def(ctx),
@@ -165,6 +178,7 @@ pub fn stdlib_module_defs(ctx: &Context) -> Vec<&'static builtins::PyModuleDef> 
             not(any(target_os = "android", target_os = "redox"))
         ))]
         grp::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         hashlib::module_def(ctx),
         json::module_def(ctx),
         #[cfg(all(
@@ -172,9 +186,10 @@ pub fn stdlib_module_defs(ctx: &Context) -> Vec<&'static builtins::PyModuleDef> 
             not(any(target_os = "ios", target_arch = "wasm32"))
         ))]
         locale::module_def(ctx),
-        #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+        #[cfg(all(feature = "extra-modules", not(any(target_os = "android", target_arch = "wasm32"))))]
         lzma::module_def(ctx),
         math::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         md5::module_def(ctx),
         #[cfg(all(feature = "host_env", any(unix, windows)))]
         mmap::module_def(ctx),
@@ -199,6 +214,7 @@ pub fn stdlib_module_defs(ctx: &Context) -> Vec<&'static builtins::PyModuleDef> 
             not(target_os = "android")
         ))]
         posixshmem::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         pyexpat::module_def(ctx),
         pystruct::module_def(ctx),
         random::module_def(ctx),
@@ -208,9 +224,13 @@ pub fn stdlib_module_defs(ctx: &Context) -> Vec<&'static builtins::PyModuleDef> 
         scproxy::module_def(ctx),
         #[cfg(all(feature = "host_env", any(unix, windows, target_os = "wasi")))]
         select::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         sha1::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         sha256::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         sha3::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         sha512::module_def(ctx),
         #[cfg(all(feature = "host_env", not(target_arch = "wasm32")))]
         socket::module_def(ctx),
@@ -250,6 +270,7 @@ pub fn stdlib_module_defs(ctx: &Context) -> Vec<&'static builtins::PyModuleDef> 
             ))
         ))]
         uuid::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         zlib::module_def(ctx),
     ]
 }

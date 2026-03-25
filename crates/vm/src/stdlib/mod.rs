@@ -7,6 +7,7 @@ mod _functools;
 mod _imp;
 pub mod _io;
 mod _operator;
+#[cfg(feature = "extra-modules")]
 mod _sre;
 mod _stat;
 mod _string;
@@ -125,6 +126,7 @@ pub fn builtin_module_defs(ctx: &Context) -> Vec<&'static PyModuleDef> {
         pwd::module_def(ctx),
         #[cfg(feature = "host_env")]
         _signal::module_def(ctx),
+        #[cfg(feature = "extra-modules")]
         _sre::module_def(ctx),
         _stat::module_def(ctx),
         _string::module_def(ctx),
