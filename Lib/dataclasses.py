@@ -2,7 +2,6 @@ import re
 import sys
 import copy
 import types
-import inspect
 import keyword
 import itertools
 import annotationlib
@@ -1219,11 +1218,12 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen,
         try:
             # In some cases fetching a signature is not possible.
             # But, we surely should not fail in this case.
+            import inspect
             text_sig = str(inspect.signature(
                 cls,
                 annotation_format=annotationlib.Format.FORWARDREF,
             )).replace(' -> None', '')
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, ImportError):
             text_sig = ''
         cls.__doc__ = (cls.__name__ + text_sig)
 
@@ -1386,7 +1386,11 @@ def _add_slots(cls, is_frozen, weakref_slot, defined_fields):
     # given cell.
     for member in newcls.__dict__.values():
         # If this is a wrapped function, unwrap it.
-        member = inspect.unwrap(member)
+        try:
+            import inspect
+            member = inspect.unwrap(member)
+        except ImportError:
+            pass
 
         if isinstance(member, types.FunctionType):
             if _update_func_cell_for__class__(member, cls, newcls):
