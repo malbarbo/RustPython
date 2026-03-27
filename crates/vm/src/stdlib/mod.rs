@@ -44,7 +44,7 @@ pub mod posix;
 pub mod posix_unix_like;
 
 #[cfg(all(
-    feature = "host_env",
+    feature = "host_env_extras",
     any(
         target_os = "linux",
         target_os = "macos",
@@ -54,7 +54,7 @@ pub mod posix_unix_like;
     not(any(target_env = "musl", target_env = "sgx"))
 ))]
 mod _ctypes;
-#[cfg(all(feature = "host_env", windows))]
+#[cfg(all(feature = "host_env_extras", windows))]
 pub(crate) mod msvcrt;
 
 #[cfg(all(
@@ -71,15 +71,15 @@ pub(crate) mod _interpreters;
 pub(crate) mod _signal;
 #[cfg(feature = "threading")]
 pub mod _thread;
-#[cfg(all(feature = "host_env", windows))]
+#[cfg(all(feature = "host_env_extras", windows))]
 mod _wmi;
 pub mod sys;
-#[cfg(all(feature = "host_env", windows))]
+#[cfg(all(feature = "host_env_extras", windows))]
 #[path = "_winapi.rs"]
 mod winapi;
-#[cfg(all(feature = "host_env", windows))]
+#[cfg(all(feature = "host_env_extras", windows))]
 mod winreg;
-#[cfg(all(feature = "host_env", windows))]
+#[cfg(all(feature = "host_env_extras", windows))]
 mod winsound;
 
 use crate::{Context, builtins::PyModuleDef};
@@ -99,7 +99,7 @@ pub fn builtin_module_defs(ctx: &Context) -> Vec<&'static PyModuleDef> {
         _codecs::module_def(ctx),
         _collections::module_def(ctx),
         #[cfg(all(
-            feature = "host_env",
+            feature = "host_env_extras",
             any(
                 target_os = "linux",
                 target_os = "macos",
@@ -116,7 +116,7 @@ pub fn builtin_module_defs(ctx: &Context) -> Vec<&'static PyModuleDef> {
         _io::module_def(ctx),
         itertools::module_def(ctx),
         marshal::module_def(ctx),
-        #[cfg(all(feature = "host_env", windows))]
+        #[cfg(all(feature = "host_env_extras", windows))]
         msvcrt::module_def(ctx),
         #[cfg(all(feature = "host_env", windows))]
         nt::module_def(ctx),
@@ -151,13 +151,13 @@ pub fn builtin_module_defs(ctx: &Context) -> Vec<&'static PyModuleDef> {
         _typing::module_def(ctx),
         _warnings::module_def(ctx),
         _weakref::module_def(ctx),
-        #[cfg(all(feature = "host_env", windows))]
+        #[cfg(all(feature = "host_env_extras", windows))]
         winapi::module_def(ctx),
-        #[cfg(all(feature = "host_env", windows))]
+        #[cfg(all(feature = "host_env_extras", windows))]
         winreg::module_def(ctx),
-        #[cfg(all(feature = "host_env", windows))]
+        #[cfg(all(feature = "host_env_extras", windows))]
         winsound::module_def(ctx),
-        #[cfg(all(feature = "host_env", windows))]
+        #[cfg(all(feature = "host_env_extras", windows))]
         _wmi::module_def(ctx),
     ]
 }

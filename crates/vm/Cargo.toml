@@ -10,9 +10,10 @@ repository.workspace = true
 license.workspace = true
 
 [features]
-default = ["compiler", "wasmbind", "gc", "host_env", "stdio", "doc", "extra-modules"]
+default = ["compiler", "wasmbind", "gc", "host_env", "host_env_extras", "stdio", "doc", "extra-modules"]
 doc = ["dep:rustpython-doc", "dep:xz"]
 host_env = ["rustpython-host_env/ctypes"]
+host_env_extras = ["host_env"]
 extra-modules = ["rustpython-sre_engine"]
 stdio = []
 importlib = []

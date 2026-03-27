@@ -11,10 +11,11 @@ license.workspace = true
 
 [features]
 capi = ["dep:rustpython-capi", "threading"]
-default = ["threading", "stdlib", "stdio", "importlib", "ssl-rustls-aws-lc", "host_env", "mimalloc", "doc"]
+default = ["threading", "stdlib", "stdio", "importlib", "ssl-rustls-aws-lc", "host_env", "host_env_extras", "mimalloc", "doc"]
 doc = ["rustpython-vm/doc", "rustpython-stdlib?/doc"]
 mimalloc = ["dep:mimalloc"]
 host_env = ["rustpython-vm/host_env", "rustpython-stdlib?/host_env"]
+host_env_extras = ["host_env", "rustpython-vm/host_env_extras", "rustpython-stdlib?/host_env_extras"]
 importlib = ["rustpython-vm/importlib"]
 encodings = ["rustpython-vm/encodings"]
 stdio = ["rustpython-vm/stdio"]
