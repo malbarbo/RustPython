@@ -10,8 +10,9 @@ repository.workspace = true
 license.workspace = true
 
 [features]
-default = ["compiler", "wasmbind", "gc", "host_env", "stdio", "extra-modules"]
+default = ["compiler", "wasmbind", "gc", "host_env", "host_env_extras", "stdio", "extra-modules"]
 host_env = []
+host_env_extras = ["host_env"]
 extra-modules = ["rustpython-sre_engine"]
 stdio = []
 importlib = []
