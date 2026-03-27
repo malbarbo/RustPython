@@ -1,0 +1,4 @@
+[package]
+name = "malachite-base"
+version = "0.9.1"
+edition = "2021"
