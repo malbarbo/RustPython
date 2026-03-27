@@ -17,7 +17,7 @@ use crate::{
 };
 use bstr::ByteSlice;
 use itertools::Itertools;
-use malachite_bigint::BigInt;
+use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 
 const STRING_WITHOUT_ENCODING: &str = "string argument without an encoding";

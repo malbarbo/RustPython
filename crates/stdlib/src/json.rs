@@ -13,7 +13,7 @@ mod _json {
         types::{Callable, Constructor},
     };
     use core::str::FromStr;
-    use malachite_bigint::BigInt;
+    use num_bigint::BigInt;
     use rustpython_common::wtf8::Wtf8Buf;
     use std::collections::HashMap;
 

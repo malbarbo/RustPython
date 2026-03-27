@@ -18,7 +18,7 @@ mod decl {
     };
     use core::sync::atomic::{AtomicBool, Ordering};
     use crossbeam_utils::atomic::AtomicCell;
-    use malachite_bigint::BigInt;
+    use num_bigint::BigInt;
     use num_traits::One;
     use rustpython_common::wtf8::Wtf8Buf;
 

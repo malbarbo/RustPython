@@ -16,7 +16,7 @@ mod winreg {
     use crate::{Py, PyObjectRef, PyPayload, PyRef, PyResult, VirtualMachine};
     use core::ptr;
     use crossbeam_utils::atomic::AtomicCell;
-    use malachite_bigint::Sign;
+    use num_bigint::Sign;
     use num_traits::ToPrimitive;
     use windows_sys::Win32::Foundation::{self, ERROR_MORE_DATA};
     use windows_sys::Win32::System::Registry;

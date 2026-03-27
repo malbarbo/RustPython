@@ -18,7 +18,7 @@ use crate::{
 };
 use alloc::borrow::Cow;
 use itertools::Itertools;
-use malachite_bigint::BigInt;
+use num_bigint::BigInt;
 use num_complex::Complex;
 use num_traits::{Num, ToPrimitive};
 use ruff_python_ast as ast;

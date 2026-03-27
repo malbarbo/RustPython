@@ -9,7 +9,7 @@ use alloc::fmt;
 use core::{iter::Peekable, mem};
 use half::f16;
 use itertools::Itertools;
-use malachite_bigint::BigInt;
+use num_bigint::BigInt;
 use num_traits::{PrimInt, ToPrimitive};
 use std::os::raw;
 

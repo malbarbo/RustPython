@@ -26,7 +26,7 @@ use crate::{
     object::{Py, PyObjectPayload, PyObjectRef, PyPayload, PyRef},
     types::{PyTypeFlags, PyTypeSlots, TypeZoo},
 };
-use malachite_bigint::BigInt;
+use num_bigint::BigInt;
 use num_complex::Complex64;
 use num_traits::ToPrimitive;
 use rustpython_common::lock::PyRwLock;

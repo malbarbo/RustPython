@@ -1,16 +1,29 @@
-use malachite_base::{num::conversion::traits::RoundingInto, rounding_modes::RoundingMode};
-use malachite_bigint::{BigInt, BigUint, Sign};
-use malachite_q::Rational;
-use num_traits::{One, ToPrimitive, Zero};
+use num_bigint::{BigInt, BigUint, Sign};
+use num_rational::BigRational;
+use num_traits::{One, Signed, ToPrimitive, Zero};
 
 pub fn true_div(numerator: &BigInt, denominator: &BigInt) -> f64 {
-    let rational = Rational::from_integers_ref(numerator.into(), denominator.into());
-    match rational.rounding_into(RoundingMode::Nearest) {
-        // returned value is $t::MAX but still less than the original
-        (val, core::cmp::Ordering::Less) if val == f64::MAX => f64::INFINITY,
-        // returned value is $t::MIN but still greater than the original
-        (val, core::cmp::Ordering::Greater) if val == f64::MIN => f64::NEG_INFINITY,
-        (val, _) => val,
+    let rational = BigRational::new(numerator.clone(), denominator.clone());
+    match rational.to_f64() {
+        Some(val) if val.is_finite() => {
+            match BigRational::from_float(val) {
+                Some(approx) => match rational.cmp(&approx) {
+                    core::cmp::Ordering::Less if val == f64::MIN => f64::NEG_INFINITY,
+                    core::cmp::Ordering::Greater if val == f64::MAX => f64::INFINITY,
+                    _ => val,
+                },
+                None => val,
+            }
+        }
+        _ => {
+            if rational.is_zero() {
+                0.0
+            } else if rational.is_positive() {
+                f64::INFINITY
+            } else {
+                f64::NEG_INFINITY
+            }
+        }
     }
 }
 
@@ -20,10 +33,11 @@ pub fn float_to_ratio(value: f64) -> Option<(BigInt, BigInt)> {
         core::cmp::Ordering::Equal => return Some((BigInt::zero(), BigInt::one())),
         core::cmp::Ordering::Greater => Sign::Plus,
     };
-    Rational::try_from(value).ok().map(|x| {
-        let (numer, denom) = x.into_numerator_and_denominator();
+    BigRational::from_float(value).map(|x| {
+        let numer = x.numer().magnitude().clone();
+        let denom = x.denom().magnitude().clone();
         (
-            BigInt::from_biguint(sign, numer.into()),
+            BigInt::from_biguint(sign, numer),
             BigUint::from(denom).into(),
         )
     })

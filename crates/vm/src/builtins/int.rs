@@ -23,7 +23,7 @@ use alloc::fmt;
 use core::cell::Cell;
 use core::ops::{Neg, Not};
 use core::ptr::NonNull;
-use malachite_bigint::{BigInt, Sign};
+use num_bigint::{BigInt, Sign};
 use num_integer::Integer;
 use num_traits::{One, Pow, PrimInt, Signed, ToPrimitive, Zero};
 

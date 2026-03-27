@@ -548,7 +548,7 @@ mod tests {
         PyObjectRef,
         builtins::{PyStr, int},
     };
-    use malachite_bigint::ToBigInt;
+    use num_bigint::ToBigInt;
 
     #[test]
     fn test_add_py_integers() {

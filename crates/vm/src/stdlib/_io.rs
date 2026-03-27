@@ -145,7 +145,7 @@ mod _io {
         sync::atomic::{AtomicBool, Ordering},
     };
     use crossbeam_utils::atomic::AtomicCell;
-    use malachite_bigint::BigInt;
+    use num_bigint::BigInt;
     use num_traits::ToPrimitive;
     use std::io::{self, Cursor, SeekFrom, prelude::*};
 

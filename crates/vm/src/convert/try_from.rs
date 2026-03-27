@@ -3,7 +3,7 @@ use crate::{
     builtins::PyFloat,
     object::{AsObject, PyObject, PyObjectRef, PyPayload, PyRef, PyResult},
 };
-use malachite_bigint::Sign;
+use num_bigint::Sign;
 use num_traits::ToPrimitive;
 
 /// Implemented by any type that can be created from a Python object.

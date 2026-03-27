@@ -2,7 +2,7 @@ use alloc::collections::VecDeque;
 use core::ops;
 
 use crate::{IndexMap, IndexSet, error::InternalError};
-use malachite_bigint::BigInt;
+use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 
 use rustpython_compiler_core::{
