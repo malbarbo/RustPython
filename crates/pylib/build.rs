@@ -7,6 +7,9 @@ const CRATE_ROOT: &str = "../..";
 fn main() {
     println!("cargo:rerun-if-env-changed=FREEZE_SEEDS");
     println!("cargo:rerun-if-env-changed=FREEZE_ALLOWLIST");
+    println!("cargo:rerun-if-env-changed=FREEZE_EXTRA_DIR");
+
+    let extra_dir = std::env::var("FREEZE_EXTRA_DIR").ok().map(PathBuf::from);
 
     // If FREEZE_SEEDS is set, generate the allowlist from seed modules.
     // If FREEZE_ALLOWLIST is set (as a file path), use it directly.
@@ -14,7 +17,7 @@ fn main() {
     if let Ok(seeds) = std::env::var("FREEZE_SEEDS") {
         let lib_dir = resolve_lib_dir();
         let seeds: Vec<&str> = seeds.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
-        let modules = collect_deps(&seeds, &lib_dir);
+        let modules = collect_deps(&seeds, &lib_dir, extra_dir.as_deref());
         let mut sorted: Vec<&str> = modules.iter().map(|s| s.as_str()).collect();
         sorted.sort();
 
@@ -34,6 +37,11 @@ fn main() {
         process_python_libs(format!("{CRATE_ROOT}/Lib/**/*").as_str());
     } else {
         process_python_libs("./Lib/**/*");
+    }
+
+    // Track changes in the extra directory for rebuild triggers.
+    if let Some(ref extra) = extra_dir {
+        process_python_libs(&format!("{}/**/*", extra.display()));
     }
 
     if cfg!(windows) {
@@ -68,10 +76,10 @@ fn resolve_lib_dir() -> PathBuf {
     lib
 }
 
-fn resolve_module(name: &str, lib_dir: &Path) -> Option<(PathBuf, bool)> {
+fn resolve_module_in(name: &str, dir: &Path) -> Option<(PathBuf, bool)> {
     let parts: Vec<&str> = name.split('.').collect();
     // Try as package: foo/bar/__init__.py
-    let mut pkg_path = lib_dir.to_path_buf();
+    let mut pkg_path = dir.to_path_buf();
     for p in &parts {
         pkg_path.push(p);
     }
@@ -80,7 +88,7 @@ fn resolve_module(name: &str, lib_dir: &Path) -> Option<(PathBuf, bool)> {
         return Some((pkg_path, true));
     }
     // Try as module: foo/bar.py
-    let mut mod_path = lib_dir.to_path_buf();
+    let mut mod_path = dir.to_path_buf();
     for p in &parts {
         mod_path.push(p);
     }
@@ -91,7 +99,11 @@ fn resolve_module(name: &str, lib_dir: &Path) -> Option<(PathBuf, bool)> {
     None
 }
 
-fn collect_deps(seeds: &[&str], lib_dir: &Path) -> HashSet<String> {
+fn resolve_module(name: &str, lib_dir: &Path, extra_dir: Option<&Path>) -> Option<(PathBuf, bool)> {
+    resolve_module_in(name, lib_dir).or_else(|| extra_dir.and_then(|d| resolve_module_in(name, d)))
+}
+
+fn collect_deps(seeds: &[&str], lib_dir: &Path, extra_dir: Option<&Path>) -> HashSet<String> {
     let mut seen_modules = HashSet::new();
     let mut seen_files = HashSet::new();
     let mut stack: Vec<String> = seeds.iter().map(|s| s.to_string()).collect();
@@ -110,7 +122,7 @@ fn collect_deps(seeds: &[&str], lib_dir: &Path) -> HashSet<String> {
             }
         }
 
-        let (file_path, is_package) = match resolve_module(&module, lib_dir) {
+        let (file_path, is_package) = match resolve_module(&module, lib_dir, extra_dir) {
             Some(r) => r,
             None => continue,
         };
@@ -140,7 +152,7 @@ fn collect_deps(seeds: &[&str], lib_dir: &Path) -> HashSet<String> {
     }
 
     // Keep only modules that resolve to actual files
-    seen_modules.retain(|m| resolve_module(m, lib_dir).is_some());
+    seen_modules.retain(|m| resolve_module(m, lib_dir, extra_dir).is_some());
     seen_modules
 }
 
