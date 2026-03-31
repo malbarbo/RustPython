@@ -5696,7 +5696,7 @@ mod fileio {
                 }
             }
 
-            #[cfg(windows)]
+            #[cfg(all(feature = "host_env_extras", windows))]
             crate::stdlib::msvcrt::setmode_binary(fd);
             if let Err(e) = zelf.as_object().set_attr("name", name, vm) {
                 // If fd was passed by user, don't close it on error
