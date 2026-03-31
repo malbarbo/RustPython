@@ -1560,11 +1560,6 @@ impl VirtualMachine {
     pub fn with_recursion<R, F: FnOnce() -> PyResult<R>>(&self, _where: &str, f: F) -> PyResult<R> {
         self.check_recursive_call(_where)?;
 
-        // Native stack guard: check C stack like _Py_MakeRecCheck
-        if self.check_c_stack_overflow() {
-            return Err(self.new_recursion_error(_where.to_string()));
-        }
-
         self.recursion_depth.update(|d| d + 1);
         scopeguard::defer! { self.recursion_depth.update(|d| d - 1) }
         f()
