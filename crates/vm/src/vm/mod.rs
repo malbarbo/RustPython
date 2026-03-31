@@ -1470,6 +1470,21 @@ impl VirtualMachine {
                     let mut stack_size: libc::size_t = 0;
                     if pthread_attr_getstack(&attr, &mut stack_addr, &mut stack_size) == 0 {
                         pthread_attr_destroy(&mut attr);
+                        // musl libc reports a small default (128KB) for the main thread
+                        // instead of the actual stack size. Use getrlimit as fallback.
+                        if stack_size < 256 * 1024 {
+                            let mut rl: libc::rlimit = core::mem::zeroed();
+                            if libc::getrlimit(libc::RLIMIT_STACK, &mut rl) == 0
+                                && rl.rlim_cur != libc::RLIM_INFINITY
+                                && rl.rlim_cur > stack_size as libc::rlim_t
+                            {
+                                let real_size = rl.rlim_cur as usize;
+                                let current_sp = psm::stack_pointer() as usize;
+                                let top = (current_sp + 4096) & !4095; // page-align up
+                                let base = top.saturating_sub(real_size);
+                                return (base, top);
+                            }
+                        }
                         let base = stack_addr as usize;
                         let top = base + stack_size;
                         return (base, top);
