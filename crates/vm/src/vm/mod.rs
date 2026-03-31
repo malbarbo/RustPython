@@ -1428,23 +1428,121 @@ impl VirtualMachine {
         self.recursion_depth.get()
     }
 
-    /// Maximum allowed stack growth (in bytes) from the point where the VM
-    /// was created.  Platform-specific stack-bounds APIs are unreliable
-    /// (musl reports 128 KB for the main thread, Windows
-    /// `GetCurrentThreadStackLimits` returns committed—not reserved—bounds,
-    /// etc.), so we simply record the stack pointer at VM creation and
-    /// trigger `RecursionError` when the stack has grown more than this limit.
-    /// 4 MB is conservative enough to work on 8 MB threads (the default when
-    /// `RUST_MIN_STACK=8388608`) while still catching runaway recursion
-    /// before a real stack overflow.
-    const MAX_C_STACK_USAGE: usize = 4 * 1024 * 1024;
+    /// Stack margin bytes (like _PyOS_STACK_MARGIN_BYTES).
+    /// 2048 * sizeof(void*) = 16KB for 64-bit.
+    #[cfg_attr(miri, allow(dead_code))]
+    const STACK_MARGIN_BYTES: usize = 2048 * core::mem::size_of::<usize>();
 
-    /// Record the current stack pointer as the baseline for overflow checks.
+    /// Get the stack boundaries using platform-specific APIs.
+    /// Returns (base, top) where base is the lowest address and top is the highest.
+    ///
+    /// On Windows, uses `VirtualQuery` on a local stack address to find
+    /// `AllocationBase`, the true bottom of the reserved stack region
+    /// (following Go runtime's approach in `runtime/os_windows.go`).
+    /// Falls back to `GetCurrentThreadStackLimits` if VirtualQuery fails.
+    #[cfg(all(not(miri), windows))]
+    fn get_stack_bounds() -> (usize, usize) {
+        use core::ffi::c_void;
+        use core::mem;
+        use windows_sys::Win32::System::Memory::{VirtualQuery, MEMORY_BASIC_INFORMATION};
+        use windows_sys::Win32::System::Threading::GetCurrentThreadStackLimits;
+
+        let mut low: usize = 0;
+        let mut high: usize = 0;
+        unsafe { GetCurrentThreadStackLimits(&mut low as *mut usize, &mut high as *mut usize) };
+
+        // Query a local variable's address (guaranteed to be in committed stack)
+        // to find AllocationBase — the true bottom of the reserved stack region.
+        // This is the same technique used by Go's runtime.
+        let mut mbi: MEMORY_BASIC_INFORMATION = unsafe { mem::zeroed() };
+        let stack_addr = (&mbi) as *const _ as *const c_void;
+        let ret = unsafe {
+            VirtualQuery(stack_addr, &mut mbi, mem::size_of::<MEMORY_BASIC_INFORMATION>())
+        };
+
+        let base = if ret != 0 {
+            let alloc_base = mbi.AllocationBase as usize;
+            // Add 16KB: 8KB for guard pages + 8KB safety margin (Go runtime convention).
+            // When the entire stack is committed, AllocationBase == low and we simply
+            // use low + 16KB. When there is a reserved-but-not-committed region below,
+            // AllocationBase < low and we use the true reservation base + 16KB.
+            alloc_base + 16 * 1024
+        } else {
+            low
+        };
+
+        (base, high)
+    }
+
+    /// Get stack boundaries on non-Windows platforms.
+    #[cfg(all(not(miri), not(windows)))]
+    fn get_stack_bounds() -> (usize, usize) {
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        {
+            use libc::{
+                pthread_attr_destroy, pthread_attr_getstack, pthread_attr_t, pthread_getattr_np,
+                pthread_self,
+            };
+            let mut attr: pthread_attr_t = unsafe { core::mem::zeroed() };
+            unsafe {
+                if pthread_getattr_np(pthread_self(), &mut attr) == 0 {
+                    let mut stack_addr: *mut libc::c_void = core::ptr::null_mut();
+                    let mut stack_size: libc::size_t = 0;
+                    if pthread_attr_getstack(&attr, &mut stack_addr, &mut stack_size) == 0 {
+                        pthread_attr_destroy(&mut attr);
+                        // musl libc reports a small default (128KB) for the main thread
+                        // instead of the actual stack size. Use getrlimit as fallback.
+                        if stack_size < 256 * 1024 {
+                            let mut rl: libc::rlimit = core::mem::zeroed();
+                            if libc::getrlimit(libc::RLIMIT_STACK, &mut rl) == 0
+                                && rl.rlim_cur != libc::RLIM_INFINITY
+                                && rl.rlim_cur > stack_size as libc::rlim_t
+                            {
+                                let real_size = rl.rlim_cur as usize;
+                                let current_sp = psm::stack_pointer() as usize;
+                                let top = (current_sp + 4096) & !4095; // page-align up
+                                let base = top.saturating_sub(real_size);
+                                return (base, top);
+                            }
+                        }
+                        let base = stack_addr as usize;
+                        let top = base + stack_size;
+                        return (base, top);
+                    }
+                    pthread_attr_destroy(&mut attr);
+                }
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            use libc::{pthread_get_stackaddr_np, pthread_get_stacksize_np, pthread_self};
+            unsafe {
+                let thread = pthread_self();
+                let stack_top = pthread_get_stackaddr_np(thread) as usize;
+                let stack_size = pthread_get_stacksize_np(thread);
+                let stack_base = stack_top - stack_size;
+                return (stack_base, stack_top);
+            }
+        }
+
+        // Fallback: estimate based on current SP and a default stack size
+        #[allow(unreachable_code)]
+        {
+            let current_sp = psm::stack_pointer() as usize;
+            let estimated_size = 8 * 1024 * 1024;
+            let base = current_sp.saturating_sub(estimated_size);
+            let top = current_sp + 1024 * 1024;
+            (base, top)
+        }
+    }
+
+    /// Calculate the C stack soft limit based on actual stack boundaries.
+    /// soft_limit = base + 2 * margin (for downward-growing stacks)
     #[cfg(not(miri))]
     fn calculate_c_stack_soft_limit() -> usize {
-        let initial_sp = psm::stack_pointer() as usize;
-        // Stack grows downward: soft limit is MAX_C_STACK_USAGE below initial SP
-        initial_sp.saturating_sub(Self::MAX_C_STACK_USAGE)
+        let (base, _top) = Self::get_stack_bounds();
+        base + Self::STACK_MARGIN_BYTES * 2
     }
 
     /// Miri doesn't support inline assembly, so disable C stack checking.
@@ -1453,7 +1551,7 @@ impl VirtualMachine {
         0
     }
 
-    /// Check if we've exceeded the maximum stack growth since VM creation.
+    /// Check if we're near the C stack limit.
     #[cfg(not(miri))]
     #[inline(always)]
     fn check_c_stack_overflow(&self) -> bool {
