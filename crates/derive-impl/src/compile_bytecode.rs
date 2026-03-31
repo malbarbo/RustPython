@@ -146,7 +146,26 @@ impl CompilationSource {
                     .collect()
             })
             .unwrap_or_default();
-        self.compile_dir_filtered(base, path, parent, mode, compiler, &allowlist)
+        let mut code_map =
+            self.compile_dir_filtered(base, path, parent, mode, compiler, &allowlist)?;
+
+        // Merge modules from FREEZE_EXTRA_DIR if set.
+        if let Ok(extra_dir) = std::env::var("FREEZE_EXTRA_DIR") {
+            let extra_path = PathBuf::from(&extra_dir);
+            if extra_path.is_dir() {
+                let extra_map = self.compile_dir_filtered(
+                    &extra_path,
+                    &extra_path,
+                    String::new(),
+                    mode,
+                    compiler,
+                    &allowlist,
+                )?;
+                code_map.extend(extra_map);
+            }
+        }
+
+        Ok(code_map)
     }
 
     fn compile_dir_filtered(
