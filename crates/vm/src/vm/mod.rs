@@ -3568,7 +3568,7 @@ impl VirtualMachine {
         }
         #[cfg(target_arch = "wasm32")]
         {
-            false
+            unsafe { check_interrupt() != 0 }
         }
     }
 
