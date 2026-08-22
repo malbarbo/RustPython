@@ -43,7 +43,7 @@ pub(crate) fn init_importlib_package(vm: &VirtualMachine, importlib: PyObjectRef
 
         // same deal as imports above
         import_builtin(vm, crate::stdlib::os::MODULE_NAME)?;
-        #[cfg(windows)]
+        #[cfg(all(feature = "host_env_extras", windows))]
         import_builtin(vm, "winreg")?;
         import_builtin(vm, "_io")?;
         import_builtin(vm, "marshal")?;
