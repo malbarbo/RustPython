@@ -156,7 +156,7 @@ impl CompilationSource {
                 let extra_map = self.compile_dir_filtered(
                     &extra_path,
                     &extra_path,
-                    String::new(),
+                    "",
                     mode,
                     compiler,
                     &allowlist,
@@ -172,7 +172,7 @@ impl CompilationSource {
         &self,
         base: &Path,
         path: &Path,
-        parent: String,
+        parent: &str,
         mode: Mode,
         compiler: &dyn Compiler,
         allowlist: &HashSet<&str>,
@@ -214,7 +214,7 @@ impl CompilationSource {
                     }
                 }
                 code_map.extend(self.compile_dir_filtered(
-                    base, &path, child_mod, mode, compiler, allowlist,
+                    base, &path, &child_mod, mode, compiler, allowlist,
                 )?);
             } else if file_name.ends_with(".py") {
                 let stem = path.file_stem().unwrap().to_str().unwrap();
@@ -222,7 +222,7 @@ impl CompilationSource {
                 // Check dotted module name against the allowlist.
                 if !allowlist.is_empty() {
                     let module_name = if stem == "__init__" {
-                        parent.clone()
+                        parent.to_owned()
                     } else if parent.is_empty() {
                         stem.to_owned()
                     } else {
