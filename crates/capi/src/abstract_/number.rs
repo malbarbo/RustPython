@@ -1,7 +1,7 @@
 use crate::util::FfiPtrExt;
 use crate::{PyObject, pystate::with_vm};
 use core::ffi::c_int;
-use malachite_bigint::Sign;
+use num_bigint::Sign;
 use rustpython_vm::protocol::PyNumber;
 
 #[unsafe(no_mangle)]

@@ -13,7 +13,7 @@ mod math {
         },
         identifier,
     };
-    use malachite_bigint::BigInt;
+    use num_bigint::BigInt;
     use num_traits::{Signed, ToPrimitive};
 
     use super::{float_repr, pymath_exception};

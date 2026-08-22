@@ -19,7 +19,7 @@ mod _pickle {
         types::{AsBuffer, Constructor, Initializer, Representable},
     };
     use core::sync::atomic::{AtomicI32, Ordering};
-    use malachite_bigint::BigInt;
+    use num_bigint::BigInt;
     use num_traits::{ToPrimitive, Zero};
     use std::collections::HashMap;
 

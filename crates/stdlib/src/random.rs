@@ -11,7 +11,7 @@ mod _random {
         types::{Constructor, Initializer},
     };
     use itertools::Itertools;
-    use malachite_bigint::{BigInt, BigUint, Sign};
+    use num_bigint::{BigInt, BigUint, Sign};
     use mt19937::MT19937;
     use num_traits::{Signed, Zero};
     use rand::{Rng, SeedableRng};

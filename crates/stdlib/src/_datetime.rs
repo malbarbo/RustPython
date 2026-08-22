@@ -23,7 +23,7 @@ mod _datetime {
         types::{AsNumber, Comparable, Constructor, Hashable, PyComparisonOp, Representable},
     };
     use crossbeam_utils::atomic::AtomicCell;
-    use malachite_bigint::{BigInt, ToBigInt};
+    use num_bigint::{BigInt, ToBigInt};
     use num_traits::{Signed, ToPrimitive, Zero};
 
     #[pyattr]

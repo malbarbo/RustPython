@@ -1767,9 +1767,6 @@ name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
-dependencies = [
- "foldhash",
-]
 
 [[package]]
 name = "hashbrown"
@@ -2062,15 +2059,6 @@ name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
 dependencies = [
  "either",
 ]
@@ -2383,55 +2371,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "malachite-base"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f368e032195e6f046f237a982cd541cac7d4e17d5c680cac5534dfa71cd8879e"
-dependencies = [
- "hashbrown 0.16.1",
- "itertools 0.14.0",
- "libm",
- "ryu",
-]
-
-[[package]]
-name = "malachite-bigint"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47d673b71d4521ba5ca045cd23d62eda6b321474ff231d6a1698cc9b892851f2"
-dependencies = [
- "malachite-base",
- "malachite-nz",
- "num-integer",
- "num-traits",
- "paste",
-]
-
-[[package]]
-name = "malachite-nz"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec0b3ad1a8d2a722fbfad2e1fc7c5044f7ab38e027240cfbcb086a62ca95c9c2"
-dependencies = [
- "itertools 0.14.0",
- "libm",
- "malachite-base",
- "wide",
-]
-
-[[package]]
-name = "malachite-q"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7841d36b3f5d39f1c65d4bcc45cb104fde66cf7eafc10da3922483fa2847cb94"
-dependencies = [
- "itertools 0.14.0",
- "libm",
- "malachite-base",
- "malachite-nz",
-]
-
-[[package]]
 name = "manyhow"
 version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2613,6 +2552,17 @@ version = "0.1.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c92800bd69a1eac91786bcfe9da64a897eb72911b8dc3095decbd07429e8048b"
 dependencies = [
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-rational"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f83d14da390562dca69fc84082e73e548e1ad308d24accdedd2720017cb37824"
+dependencies = [
+ "num-bigint",
  "num-integer",
  "num-traits",
 ]
@@ -3179,7 +3129,7 @@ checksum = "bc10e50b7a1f2cc3887e983721cb51fc7574be0066c84bff3ef9e5c096e8d6d5"
 dependencies = [
  "libc",
  "libm",
- "malachite-bigint",
+ "num-bigint",
  "num-complex",
  "num-integer",
  "num-traits",
@@ -3725,7 +3675,7 @@ dependencies = [
  "bitflags 2.13.1",
  "itertools 0.15.0",
  "libc",
- "malachite-bigint",
+ "num-bigint",
  "num-complex",
  "pyo3",
  "rustpython-pylib",
@@ -3741,8 +3691,8 @@ dependencies = [
  "indexmap",
  "itertools 0.15.0",
  "log",
- "malachite-bigint",
  "memchr",
+ "num-bigint",
  "num-complex",
  "num-traits",
  "rapidhash",
@@ -3772,12 +3722,11 @@ dependencies = [
  "libc",
  "libz-rs-sys",
  "lock_api",
- "malachite-base",
- "malachite-bigint",
- "malachite-q",
  "md-5",
  "memchr",
+ "num-bigint",
  "num-complex",
+ "num-rational",
  "num-traits",
  "parking_lot",
  "radium",
@@ -3816,7 +3765,7 @@ dependencies = [
  "bitflagset",
  "itertools 0.15.0",
  "lz4_flex",
- "malachite-bigint",
+ "num-bigint",
  "num-complex",
  "num-traits",
  "rustpython-ruff_source_file",
@@ -4039,9 +3988,9 @@ dependencies = [
  "itertools 0.15.0",
  "libc",
  "libsqlite3-sys",
- "malachite-bigint",
  "memchr",
  "mt19937",
+ "num-bigint",
  "num-complex",
  "num-traits",
  "num_enum",
@@ -4116,8 +4065,8 @@ dependencies = [
  "jiff",
  "libc",
  "log",
- "malachite-bigint",
  "memchr",
+ "num-bigint",
  "num-complex",
  "num-integer",
  "num-traits",
@@ -4220,15 +4169,6 @@ name = "ryu"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
-
-[[package]]
-name = "safe_arch"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f7caad094bd561859bcd467734a720c3c1f5d1f338995351fefe2190c45efed"
-dependencies = [
- "bytemuck",
-]
 
 [[package]]
 name = "salsa20"
@@ -5136,16 +5076,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f3ef584124b911bcc3875c2f1472e80f24361ceb789bd1c62b3e9a3df9ff43c"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "wide"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dfdfe6a32973f2d1b268b8895845a8a96cac2f0191e72c27cc929036060dbf89"
-dependencies = [
- "bytemuck",
- "safe_arch",
 ]
 
 [[package]]
