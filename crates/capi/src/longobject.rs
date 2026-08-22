@@ -2,7 +2,7 @@ use crate::object::define_py_check;
 use crate::{PyObject, pystate::with_vm};
 use bitflags::bitflags;
 use core::ffi::{CStr, c_char, c_double, c_int, c_long, c_longlong, c_ulong, c_ulonglong, c_void};
-use malachite_bigint::{BigInt, Sign};
+use num_bigint::{BigInt, Sign};
 use rustpython_vm::builtins::{PyInt, try_bigint_to_f64, try_f64_to_bigint};
 use rustpython_vm::common::int::bytes_to_int;
 use rustpython_vm::protocol::handle_bytes_to_int_err;

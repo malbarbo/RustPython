@@ -18,7 +18,7 @@ mod decl {
         object::{AsObject, PyPayload},
     };
     use core::cell::RefCell;
-    use malachite_bigint::BigInt;
+    use num_bigint::BigInt;
     use num_traits::Zero;
     use rustpython_compiler_core::marshal::{self, DumpableValue};
 
@@ -279,7 +279,7 @@ mod decl {
                     digits.pop();
                 }
                 let n = digits.len() as i32;
-                let n = if sign == malachite_bigint::Sign::Minus {
+                let n = if sign == num_bigint::Sign::Minus {
                     -n
                 } else {
                     n

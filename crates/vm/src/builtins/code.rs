@@ -20,7 +20,7 @@ use core::{
     ops::Deref,
     sync::atomic::{AtomicPtr, AtomicU64, Ordering},
 };
-use malachite_bigint::BigInt;
+use num_bigint::BigInt;
 use num_traits::Zero;
 use rustpython_compiler_core::{OneIndexed, bytecode::CodeUnits, bytecode::PyCodeLocationInfoKind};
 

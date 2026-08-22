@@ -40,7 +40,7 @@ use core::ptr::NonNull;
 use core::sync::atomic;
 use core::sync::atomic::Ordering::{Acquire, Relaxed};
 use itertools::Itertools;
-use malachite_bigint::BigInt;
+use num_bigint::BigInt;
 use num_traits::Zero;
 use rustpython_common::atomic::{PyAtomic, Radium};
 use rustpython_common::{
