@@ -187,6 +187,7 @@ where
         instrumentation_version: AtomicU64::new(0),
         #[cfg(feature = "threading")]
         stop_the_world: StopTheWorldState::new(),
+        sources: PyMutex::default(),
     });
 
     // Create VM with the global state

@@ -818,6 +818,9 @@ pub struct PyGlobalState {
     pub stop_the_world: StopTheWorldState,
     /// This interpreter's garbage collector policy and results.
     pub gc: crate::gc_state::GcInterpreterState,
+    /// The source text a traceback shows its lines from, by the file name of
+    /// the code. A traceback reads the disk only for a name missing here.
+    pub sources: PyMutex<HashMap<String, String>>,
 }
 
 impl PyGlobalState {

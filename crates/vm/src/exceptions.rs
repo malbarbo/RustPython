@@ -140,7 +140,7 @@ impl VirtualMachine {
         if let Some(tb) = traceback {
             writeln!(output, "Traceback (most recent call last):")?;
             for tb in tb.iter() {
-                write_traceback_entry(output, &tb)?;
+                write_traceback_entry(vm, output, &tb)?;
             }
         }
 
@@ -373,8 +373,36 @@ impl VirtualMachine {
     }
 }
 
-#[cfg(feature = "host_env")]
+/// Writes line `lineno` of `filename`, from the sources of the interpreter or,
+/// when the name is not there, from the disk.
 fn print_source_line<W: Write>(
+    vm: &VirtualMachine,
+    output: &mut W,
+    filename: &str,
+    lineno: usize,
+) -> Result<(), W::Error> {
+    // The line is copied out, because writing to `output` can run Python code
+    // that prints a traceback of its own.
+    let line = vm.state.sources.lock().get(filename).map(|source| {
+        source
+            .lines()
+            .nth(lineno - 1)
+            .map(|line| line.trim_start().to_owned())
+    });
+    if let Some(line) = line {
+        if let Some(line) = line {
+            // Indented with 4 spaces
+            writeln!(output, "    {line}")?;
+        }
+        return Ok(());
+    }
+    #[cfg(feature = "host_env")]
+    print_source_line_from_disk(output, filename, lineno)?;
+    Ok(())
+}
+
+#[cfg(feature = "host_env")]
+fn print_source_line_from_disk<W: Write>(
     output: &mut W,
     filename: &str,
     lineno: usize,
@@ -402,6 +430,7 @@ fn print_source_line<W: Write>(
 
 /// Print exception occurrence location from traceback element
 fn write_traceback_entry<W: Write>(
+    vm: &VirtualMachine,
     output: &mut W,
     tb_entry: &Py<PyTraceback>,
 ) -> Result<(), W::Error> {
@@ -414,8 +443,7 @@ fn write_traceback_entry<W: Write>(
         tb_entry.frame.iframe().code().obj_name
     )?;
 
-    #[cfg(feature = "host_env")]
-    print_source_line(output, filename, tb_entry.lineno.get())?;
+    print_source_line(vm, output, filename, tb_entry.lineno.get())?;
 
     Ok(())
 }
