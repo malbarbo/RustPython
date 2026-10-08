@@ -888,6 +888,9 @@ pub struct PyGlobalState {
     pub id_refcount: AtomicI64,
     /// When true, dropping the last ID ref destroys the interpreter.
     pub require_idref: AtomicBool,
+    /// The source text a traceback shows its lines from, by the file name of
+    /// the code. A traceback reads the disk only for a name missing here.
+    pub sources: PyMutex<HashMap<String, String>>,
 }
 
 impl PyGlobalState {

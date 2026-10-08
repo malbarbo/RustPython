@@ -194,6 +194,7 @@ where
         ready: AtomicBool::new(false),
         id_refcount: AtomicI64::new(0),
         require_idref: AtomicBool::new(false),
+        sources: PyMutex::default(),
     });
 
     // Create VM with the global state
