@@ -13,6 +13,26 @@ unsafe extern "C" {
     fn check_interrupt() -> i32;
 }
 
+// Whether a Stop of the host interrupts Python. The flag of a Stop stays up
+// until the host's next run, so Python that the embedder runs of its own
+// after it -- the initialization of an interpreter among it, which panics on
+// any exception -- would be interrupted too. Off until the embedder turns it
+// on around the code that a Stop is meant for.
+#[cfg(target_arch = "wasm32")]
+static INTERRUPTIBLE: AtomicBool = AtomicBool::new(false);
+
+/// Lets the host's Stop interrupt Python, or not, and returns what it was
+/// before. Off by default.
+#[cfg(target_arch = "wasm32")]
+pub fn set_interruptible(on: bool) -> bool {
+    INTERRUPTIBLE.swap(on, Ordering::Relaxed)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn host_interrupted() -> bool {
+    INTERRUPTIBLE.load(Ordering::Relaxed) && unsafe { check_interrupt() } != 0
+}
+
 #[cfg(feature = "rustpython-compiler")]
 mod compile;
 pub(crate) mod compile_mode;
@@ -2952,7 +2972,7 @@ impl VirtualMachine {
         }
 
         #[cfg(target_arch = "wasm32")]
-        if unsafe { check_interrupt() } != 0 {
+        if host_interrupted() {
             return true;
         }
 
@@ -2985,10 +3005,8 @@ impl VirtualMachine {
 
         // On wasm32 there are no POSIX signals; the host sets an interrupt flag instead.
         #[cfg(target_arch = "wasm32")]
-        if unsafe { check_interrupt() } != 0 {
-            return Err(
-                self.new_exception_empty(self.ctx.exceptions.keyboard_interrupt.to_owned())
-            );
+        if host_interrupted() {
+            return Err(self.new_exception_empty(self.ctx.exceptions.keyboard_interrupt.to_owned()));
         }
 
         Ok(())
